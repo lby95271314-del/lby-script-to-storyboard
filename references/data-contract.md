@@ -46,7 +46,7 @@
 - utterances.mode为sync/vo/narration/inner/post，分别对应同步对白、画外声、旁白、内心声和后期配音。说话人始终明确，lip_sync_shot_ids只包含真正展示此人说话口型的镜头。重叠发声须记录overlap_reason，普通对白不默认重叠。
 - 镜头和声音起止为段内相对时间，segment.start/end为集内时间。shots必须按剪辑顺序覆盖完整段；duration=end-start。叠化等特殊剪辑需要另存编辑时间轴并扩展检查，不能把重叠镜头直接塞进此线性约定。
 - shots.events是镜内动作/表情/声音等时间区间，不是新增切镜；容许并行动作，顺序依赖可用depends_on记录。对白的单一权威时间放utterances，不在events复制另一套时间。
-- camera七项逐项填写；audio四层逐项填写。HTML的11列从这些字段派生，台词列按ID引用完整原词与区间，台词核算列显示utterance的测量/估算依据。
+- camera七项逐项填写；audio四层逐项填写。camera.scale取固定词表：大远景、全景、中景、中近景、近景、特写、大特写；camera.angle取仰拍、平视、俯拍。“半身”“脸部特写”这类写法折算进词表，便于按景别跳级和机位组自检。HTML的11列从这些字段派生，台词列按ID引用完整原词与区间，台词核算列显示utterance的测量/估算依据。
 - frames.kind为lineart、board、reference。lineart必须属于一个shot并有真实叙事时刻；关键帧用同一shot_id、不同time及可选keyframe_id。board属于segment。
 - accepted帧必须给实际path；path相对于JSON所在目录或为绝对路径。记录真实dimensions、format、qa_notes、source_asset_ids及输入绑定信息。available只是资产可访问，input_bound是生成时实际传入；二者不能混同。
 - 待出图可以用pending且无path；错误图用needs_fix并保留原因。setting/character参考只能kind=reference，不能挂到shots.frame_ids。

@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 
 EPS = 0.001
+SCALES = {'大远景', '全景', '中景', '中近景', '近景', '特写', '大特写'}
+ANGLES = {'仰拍', '平视', '俯拍'}
 
 
 def validate(data, base, require_media=False):
@@ -159,6 +161,17 @@ def validate(data, base, require_media=False):
             for key in ('ambience', 'action', 'human', 'music'):
                 if not isinstance(audio, dict) or not isinstance(audio.get(key), str) or not audio.get(key, '').strip():
                     fail(f'{qid}: missing audio layer {key}')
+            scale = camera.get('scale') if isinstance(camera, dict) else None
+            if isinstance(scale, str) and scale.strip() and scale.strip() not in SCALES:
+                warnings.append(f'{qid}: scale outside vocabulary ({scale})')
+            angle = camera.get('angle') if isinstance(camera, dict) else None
+            if isinstance(angle, str) and angle.strip() and angle.strip() not in ANGLES:
+                warnings.append(f'{qid}: angle outside vocabulary ({angle})')
+            shot_len = b - a
+            if shot_len > 6 + EPS:
+                warnings.append(f'{qid}: shot {shot_len:.1f}s over 6s, needs explicit reason')
+            elif shot_len < 0.4 and len(shots) > 1:
+                warnings.append(f'{qid}: shot {shot_len:.1f}s under 0.4s')
             for key in ('camera_id', 'space', 'content', 'previous_state', 'end_state'):
                 if not isinstance(shot.get(key), str) or not shot.get(key, '').strip():
                     fail(f'{qid}: missing shot description {key}')
@@ -235,6 +248,8 @@ def validate(data, base, require_media=False):
             spoken.append(utterance)
             if not utterance.get('timing_basis'):
                 warnings.append(f'{uid}: speech timing basis not recorded')
+        if length > 8 and len(shots) / length * 60 < 13:
+            warnings.append(f'{sid}: cutting rate {len(shots) / length * 60:.1f}/min below drama baseline (~23/min)')
         if not isinstance(segment.get('prompt'), str) or not segment.get('prompt', '').strip():
             warnings.append(f'{sid}: model prompt not prepared')
 
