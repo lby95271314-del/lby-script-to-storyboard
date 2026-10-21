@@ -294,17 +294,37 @@ def validate(data, base, require_media=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('json_path', type=Path)
-    parser.add_argument('--require-media', action='store_true')
+    parser.add_argument('--require-media', action='store_true', help='legacy alias for strict delivery (default)')
+    parser.add_argument('--draft', action='store_true', help='structure-only work in progress; never authorizes delivery')
+    parser.add_argument('--reviews', type=Path, help='actual per-frame visual inspection report')
     args = parser.parse_args()
+    if args.draft and args.require_media:
+        parser.error('--draft and --require-media cannot be combined')
     try:
         data = json.loads(args.json_path.read_text(encoding='utf-8-sig'))
         if not isinstance(data, dict):
             raise ValueError('root must be an object')
-        result = validate(data, args.json_path.resolve().parent, args.require_media)
-    except (OSError, ValueError, TypeError) as exc:
+        base = args.json_path.resolve().parent
+        result = validate(data, base, require_media=not args.draft)
+        result['mode'] = 'draft' if args.draft else 'delivery'
+        result['delivery_allowed'] = False
+        result['media_files_complete'] = result.pop('visual_complete')
+        if args.draft:
+            result['scope'] = 'Structure-only draft; does not authorize image generation or delivery.'
+            result['passed'] = result['data_valid']
+        else:
+            from visual_gate import check
+            reviews = json.loads(args.reviews.read_text(encoding='utf-8-sig')) if args.reviews else {}
+            gate = check(data, base, reviews)
+            result['visual_gate'] = gate
+            result['delivery_allowed'] = result['data_valid'] and gate['delivery_allowed']
+            result['errors'].extend(gate['errors'])
+            result['passed'] = result['delivery_allowed']
+            result['scope'] = 'Structure plus hash-bound visual inspection evidence; actual image viewing remains mandatory.'
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
         result = {'data_valid': False, 'visual_complete': False, 'errors': [str(exc)], 'warnings': []}
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result['data_valid'] else 1
+    return 0 if result.get('passed', False) else 1
 
 
 if __name__ == '__main__':

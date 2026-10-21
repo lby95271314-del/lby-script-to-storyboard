@@ -54,11 +54,16 @@
 
 ## 验证命令与边界
 
+正式交付默认执行：
+
 ~~~text
-python scripts/validate_storyboard.py 项目目录/storyboard.json
-python scripts/validate_storyboard.py 项目目录/storyboard.json --require-media
+python scripts/validate_storyboard.py 项目/storyboard.json --reviews 项目/visual-review.json
 ~~~
 
-默认允许尚未完成的图，但输出visual_complete=false和对应warning；数据错误退出码1。--require-media要求每镜至少一张accepted线稿和每段一张accepted故事板，缺项也退出码1。无效JSON/结构也退出码1。
+只有退出码0且delivery_allowed=true允许正式交付；未给视觉验收记录即拒绝。--require-media仍兼容但不绕过视觉门槛。明确的文字规划/进度草稿可用--draft，仅检查结构且delivery_allowed始终false，不允许夹带不合格截图。Python函数validate仍是结构检查，不代表正式交付许可。
 
-脚本核对线性时间轴、时长差异、节拍/原台词覆盖、台词归属、跨切点区间、镜内事件、引用及文件存在/基本图片签名。它不能证明实际画面正确、输入确实送入某工具、语速自然、内容语义完整、网页可用或视频通过。accepted状态必须由真实审阅填写；完整检查记录分别报告数据检查、画面审阅、网页检查、视频检查。
+每个叙事frame新增visual_contract，结构及九项逐图检查见[逐镜强制自检](visual-self-check.md)。有人进出画时frame.visible_characters单独说明该帧可见人物，否则继承整镜清单。board新增source_frame_ids及source_frames_sha256，顺序和源图哈希必须与通过验收的当前帧一致。
+
+视觉验收单独存visual-review.json，含preflight/frames/boards，使用visual_gate.py prepare生成pending底稿；不可只手写accepted。图片、镜头目标或参考素材改变会使哈希绑定失效，需要重新验收。
+
+数据检查本身不能理解图片内容；语义核对由真实看图的视觉能力/人工完成，程序强制检查记录完整、逐项通过、结构化人物观察与目标一致、文件与描述版本有效。不得虚构看图证据，完整记录区分结构检查、画面验收、网页检查和视频检查。
