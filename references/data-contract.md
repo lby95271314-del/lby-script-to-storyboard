@@ -6,7 +6,7 @@
 
 ~~~json
 {
-  "project": {"title":"示例", "target_duration":5, "duration_mode":"content_first", "aspect_ratio":"16:9"},
+  "project": {"title":"示例", "target_duration":5, "duration_mode":"content_first", "aspect_ratio":"16:9", "pace":"快切型"},
   "characters":["甲"],
   "source_beats":[{"id":"B01", "text":"甲说话并交出钥匙", "source_location":"第一场"}],
   "source_dialogues":[{"id":"D01", "speaker":"甲", "text":"给你。"}],
@@ -21,6 +21,7 @@
       "id":"S01-01", "start":0, "end":5, "duration":5,
       "beat_ids":["B01"], "frame_ids":["F01"], "visible_characters":["甲"],
       "camera_id":"CAM1", "space":"甲画左，钥匙在桌面中部",
+      "function":"主表演",
       "camera":{"scale":"中景","lens":"50mm等效","movement":"固定","depth":"中景深","composition":"甲居左","speed":"静止","angle":"平视"},
       "content":"甲看向画右的人，说完把钥匙推过去。",
       "dialogue_ids":["D01"],
@@ -42,6 +43,7 @@
 ## 字段与对应关系
 
 - characters为稳定说话人/人物名；source_beats保留原文节拍，shots.beat_ids认领，允许同一节拍跨镜。导演补充动作与原文分开标注。
+- project.pace取稳态对话型/中快型/快切型，与[短剧镜头语言基准](short-drama-grammar.md)的节奏范式一致；不填时按稳态对话型自检。shots.function取建立/主表演/反应/插入/信息/收束：信息镜必须有可读的文字目标（账单、手机、平板、怀表等）并在画面内容写明；收束镜不得带对白；function用于节奏与插入镜占比自检，不改变11列结构。
 - source_dialogues保存逐字原词。utterances描述真实声音区间；同句跨镜只写一条utterance，并列出所有相交镜头。跨生成段确有连续声轨方案时可以分片，part_start/part_end是原字符串的Unicode字符索引、左闭右开，各片拼回原句；不截断字音。增加continuity_plan说明后期/音频处理。
 - utterances.mode为sync/vo/narration/inner/post，分别对应同步对白、画外声、旁白、内心声和后期配音。说话人始终明确，lip_sync_shot_ids只包含真正展示此人说话口型的镜头。重叠发声须记录overlap_reason，普通对白不默认重叠。
 - 镜头和声音起止为段内相对时间，segment.start/end为集内时间。shots必须按剪辑顺序覆盖完整段；duration=end-start。叠化等特殊剪辑需要另存编辑时间轴并扩展检查，不能把重叠镜头直接塞进此线性约定。
